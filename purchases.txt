@@ -1,0 +1,5 @@
+User bought £1200 at £1902.97 - 2026-02-18T07:43:13.314Z
+User invested £10000 | Price: £1892.49 | Ounces: 5.2840 | 2026-02-18T07:49:23.388Z
+User invested £1900 | Price: £1905.26 | Ounces: 0.9972 | 2026-02-18T07:53:45.080Z
+User invested £100 | Price: £1896.91 | Ounces: 0.0527 | 2026-02-18T07:57:20.069Z
+User invested £100 | Price: £1929.48 | Ounces: 0.0518 | 2026-02-18T08:03:53.563Z

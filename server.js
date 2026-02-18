@@ -1,29 +1,87 @@
 import http from "node:http";
 import path from "node:path";
 import fs from "node:fs/promises";
+import { EventEmitter } from "node:events";
 
 const PORT = 8000;
 const __dirname = import.meta.dirname;
 
+const emitter = new EventEmitter();
+
+let goldPrice = 1900;
+
+function generatePrice() {
+  const change = (Math.random() - 0.5) * 8;
+  goldPrice += change;
+
+  if (goldPrice < 1800) goldPrice = 1800;
+  if (goldPrice > 2100) goldPrice = 2100;
+
+  goldPrice = Number(goldPrice.toFixed(2));
+
+  emitter.emit("priceUpdate", goldPrice);
+}
+
+setInterval(generatePrice, 3000);
+
 const server = http.createServer(async (req, res) => {
-  if (req.url === "/api") {
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ message: "Investment successful!" }));
+  if (req.url === "/events") {
+    res.writeHead(200, {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    });
+
+    const sendPrice = (price) => {
+      res.write(`data: ${JSON.stringify({ price })}\n\n`);
+    };
+
+    sendPrice(goldPrice);
+
+    emitter.on("priceUpdate", sendPrice);
+
+    req.on("close", () => {
+      emitter.off("priceUpdate", sendPrice);
+    });
+
+    return;
+  }
+
+  if (req.url === "/api/buy" && req.method === "POST") {
+    let body = "";
+
+    req.on("data", (chunk) => {
+      body += chunk;
+    });
+
+    req.on("end", async () => {
+      const { amount } = JSON.parse(body);
+
+      const ounces = (amount / goldPrice).toFixed(4);
+
+      const logEntry = `User invested £${amount} | Price: £${goldPrice} | Ounces: ${ounces} | ${new Date().toISOString()}\n`;
+
+      await fs.appendFile("purchases.txt", logEntry);
+
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ success: true, ounces }));
+    });
+
     return;
   }
 
   if (req.url === "/") {
-    const filePath = path.join(__dirname, "public", "index.html");
-    const content = await fs.readFile(filePath);
+    const file = await fs.readFile(
+      path.join(__dirname, "public", "index.html"),
+    );
     res.writeHead(200, { "Content-Type": "text/html" });
-    res.end(content);
+    res.end(file);
     return;
   }
 
-  const filePath = path.join(__dirname, "public", req.url);
-
   try {
-    const content = await fs.readFile(filePath);
+    const filePath = path.join(__dirname, "public", req.url);
+    const file = await fs.readFile(filePath);
 
     const ext = path.extname(filePath);
 
@@ -32,20 +90,19 @@ const server = http.createServer(async (req, res) => {
       ".css": "text/css",
       ".png": "image/png",
       ".jpg": "image/jpeg",
-      ".html": "text/html",
     };
 
     res.writeHead(200, {
       "Content-Type": contentTypes[ext] || "application/octet-stream",
     });
 
-    res.end(content);
-  } catch (err) {
+    res.end(file);
+  } catch {
     res.writeHead(404);
     res.end("Not Found");
   }
 });
 
 server.listen(PORT, () =>
-  console.log(`Server is listening at http://localhost:${PORT}`),
+  console.log(`Server running at http://localhost:${PORT}`),
 );
