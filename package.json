@@ -1,0 +1,21 @@
+{
+  "name": "scimba-golddigger",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/Nuhamin-07/goldDigger#readme",
+  "bugs": {
+    "url": "https://github.com/Nuhamin-07/goldDigger/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nuhamin-07/goldDigger.git"
+  },
+  "license": "ISC",
+  "author": "Nuhamin",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  }
+}
